@@ -233,5 +233,173 @@ $$
 \mathbf{a}_{t}^{l-1}=f^{l-1}\left(\operatorname{net}_{t}^{l-1}\right)
 \end{array}
 $$
-上式中
+上式中,
+
+$net_t^l$是第$l$层神经元的加权输入（假设第$l$层是循环层）
+
+$net_t^{t-1}$是第$l-1$层神经元的加权输入
+
+$a_t^{t-1}$是第$l-1$层神经元的输出
+
+$f^{l-1}$是第$l-1$层的激活函数
+$$
+\begin{aligned}
+\frac{\partial \operatorname{net}_{t}^{l}}{\partial \mathrm{net}_{t}^{l-1}} &=\frac{\partial \mathrm{net}^{l}}{\partial \mathrm{a}_{t}^{l-1}} \frac{\partial \mathrm{a}_{t}^{l-1}}{\partial \mathrm{net}_{t}^{l-1}} \\
+&=U \operatorname{diag}\left[f^{\prime l-1}\left(\operatorname{net}_{t}^{l-1}\right)\right]
+\end{aligned}
+$$
+所以，
+$$
+\begin{aligned}
+\left(\delta_{t}^{l-1}\right)^{T} &=\frac{\partial E}{\partial \operatorname{net}_{t}^{l-1}} \\
+&=\frac{\partial E}{\partial \operatorname{net}_{t}^{l}} \frac{\partial{\mathrm{n} e t}_{t}^{l}}{\partial \operatorname{net}_{t}^{l-1}} \\
+&=\left(\delta_{t}^{l}\right)^{T} U \operatorname{diag}\left[f^{\prime l-1}\left(\operatorname{net}_{t}^{l-1}\right)\right]
+\end{aligned}
+$$
+上式就是将误差项传递到上一层算法。
+
+#### 权重梯度的计算
+
+首先，我们到目前为止，在前两步中已经计算得到的量，包括每个时刻$t$循环层的输出值$s_t$，以及误差项$\delta_t$。
+
+![点击查看大图](/Users/idestro/PycharmProjects/Neural-Network/rnn/images/2256672-f7d034c8f05812f7.png)
+
+只要知道了任意一个时刻的误差项$\delta_t$，以及上一个时刻循环层的输出值$s_{t-1}$，就可以按照下面的公式求出权重矩阵在$t$时刻的梯度$\nabla_{W t} E$:
+$$
+\nabla_{W_{t}} E=\left[\begin{array}{cccc}
+\delta_{1}^{t} s_{1}^{t-1} & \delta_{1}^{t} s_{2}^{t-1} & \ldots & \delta_{1}^{t} s_{n}^{t-1} \\
+\delta_{2}^{t} s_{1}^{t-1} & \delta_{2}^{t} s_{2}^{t-1} & \ldots & \delta_{2}^{t} s_{n}^{t-1} \\
+\cdot & & & \\
+\delta_{n}^{t} s_{1}^{t-1} & \delta_{n}^{t} s_{2}^{t-1} & \ldots & \delta_{n}^{t} s_{n}^{t-1}
+\end{array}\right]
+$$
+在上式中，$\delta_i^t$表示$t$时刻误差项向量的第$i$个分量；$\delta_i^{t-1}$表示$t-1$时刻循环层第$i$个神经元的输出值。
+$$
+\begin{aligned}
+\text { net }_{t} &=U_{\mathrm{x}_{t}}+W \mathrm{~s}_{t-1} \\
+\left[\begin{array}{c}
+n e t_{1}^{t} \\
+n e t_{2}^{t} \\
+\cdot \\
+\cdot \\
+n e t_{n}^{t}
+\end{array}\right] &=U \mathrm{x}_{t}+\left[\begin{array}{cccc}
+w_{11} & w_{12} & \ldots & w_{1 n} \\
+w_{21} & w_{22} & \ldots & w_{2 n} \\
+\cdot & & & \\
+\cdot & & & \\
+w_{n 1} & w_{n 2} & \ldots & w_{n n}
+\end{array}\right]\left[\begin{array}{c}
+s_{1}^{t-1} \\
+s_{2}^{t-1} \\
+\cdot \\
+s_{n}^{t-1}
+\end{array}\right] \\
+&=U \mathrm{x}_{t}+\left[\begin{array}{c}
+w_{11} s_{1}^{t-1}+w_{12} s_{2}^{t-1} \ldots w_{1 n} s_{n}^{t-1} \\
+w_{21} s_{1}^{t-1}+w_{22} s_{2}^{t-1} \ldots w_{2 n} s_{n}^{t-1} \\
+w_{n 1} s_{1}^{t-1}+w_{n 2} s_{2}^{t-1} \ldots w_{n n} s_{n}^{t-1}
+\end{array}\right]
+\end{aligned}
+$$
+因为对$W$求导与$U_{X_t}$无关，我们不考虑。现在，我们考虑对权重项$w_{ji}$求导。通过观察上式我们可以看到$w_{ji}$只与$net_j^t$有关，所以：
+$$
+\begin{aligned}
+\frac{\partial E}{\partial w_{ji}}&=\frac{\partial E}{\partial net_j^t}\frac{\partial net_j^t}
+{\partial w_{ji}} \\ 
+&= \delta_j^t s_i^{t-1}
+\end{aligned}
+$$
+按照上面的规律就可以生成式5里面的矩阵。我们已经求得了权重矩阵$W$在$t$时刻的梯度$\nabla_{W_t}E $，最终的梯度$\nabla_{W}E$是各个时刻的梯度之和：
+$$
+\begin{aligned}
+\nabla_{W} E &=\sum_{i=1}^{t} \nabla_{W_{i}} E \\
+&=\left[\begin{array}{cccccc}
+\delta_{1}^{t} s_{1}^{t-1} & \delta_{1}^{t} s_{2}^{t-1} & \ldots & \delta_{1}^{t} s_{n}^{t-1} \\
+\delta_{2}^{t} s_{1}^{t-1} & \delta_{2}^{t} s_{2}^{t-1} & \ldots & \delta_{2}^{t} s_{n}^{t-1} \\
+\cdot & & & \\
+\cdot & & & \\
+\delta_{n}^{t} s_{1}^{t-1} & \delta_{n}^{t} s_{2}^{t-1} & \ldots & \delta_{n}^{t} s_{n}^{t-1}
+\end{array}\right]+\ldots+\left[\begin{array}{cccc}
+\delta_{1}^{1} s_{1}^{0} & \delta_{1}^{1} s_{2}^{0} & \ldots & \delta_{1}^{1} s_{n}^{0} \\
+\delta_{2}^{1} s_{1}^{0} & \delta_{2}^{1} s_{2}^{0} & \ldots & \delta_{2}^{1} s_{n}^{0} \\
+\cdot & & & \\
+\cdot & & & \\
+\delta_{n}^{1} s_{1}^{0} & \delta_{n}^{1} s_{2}^{0} & \ldots & \delta_{n}^{1} s_{n}^{0}
+\end{array}\right]
+\end{aligned}
+$$
+上式就是计算循环层权重矩阵$W$的梯度公式。
+
+为什么最终的梯度是各个时刻的梯度之和呢？
+
+我们还是从这个式子开始：
+$$
+net_t=Ux_t+Wf(net_{t-1})
+$$
+因为$U_{X_t}$与$W$完全无关，我们把它看做常量。右边的$W$与$f(net_{t-1})$都是$W$的函数，根据导数乘法原则：
+$$
+\frac{\partial \mathrm{net}_{t}}{\partial W}=\frac{\partial W}{\partial W} f\left(\mathrm{net}_{t-1}\right)+W \frac{\partial f\left(\mathrm{net}_{t-1}\right)}{\partial W}
+$$
+我们最终需要计算的是$\nabla_WE$：
+$$
+\begin{aligned}
+\nabla_{W} E &=\frac{\partial E}{\partial W} \\
+&=\frac{\partial E}{\partial \operatorname{net}_{t}} \frac{\partial \mathrm{net}_{t}}{\partial W} \\
+&=\delta_{t}^{T} \frac{\partial W}{\partial W} f\left(\mathrm{net}_{t-1}\right)+\delta_{t}^{T} W \frac{\partial f\left(\mathrm{net}_{t-1}\right)}{\partial W}
+\end{aligned}
+$$
+先计算式7加号左边的部分。$\frac{\partial W}{\partial W}$式矩阵对矩阵求导，其结果是一个四维张量(tensor)，如下所示：
+
+![image-20210316111236544](/Users/idestro/PycharmProjects/Neural-Network/rnn/images/image-20210316111236544.png)
+
+接下来，我们知道$s_{t-1}=f(net_{t-1})$，它是一个列向量。我们让上面的四维张量与这个向量相乘，得到了一个三维张量，再左乘行向量$\delta_t^T$，最终得到一个矩阵：
+
+![image-20210316111534645](/Users/idestro/PycharmProjects/Neural-Network/rnn/images/image-20210316111534645.png)
+
+接下来，我们计算右边的部分：
+$$
+\begin{aligned}
+\delta_{t}^{T} W \frac{\partial f\left(\operatorname{net}_{t-1}\right)}{\partial W} &=\delta_{t}^{T} W \frac{\partial f\left(\operatorname{net}_{t-1}\right)}{\partial \operatorname{net}_{t-1}} \frac{\partial \operatorname{net}_{t-1}}{\partial W} \\
+&=\delta_{t}^{T} W f^{\prime}\left(\operatorname{net}_{t-1}\right) \frac{\partial{\operatorname{net}}_{t-1}}{\partial W} \\
+&=\delta_{t}^{T} \frac{\partial \mathrm{net}_{t}}{\partial \operatorname{net}_{t-1}} \frac{\partial \operatorname{net}_{t-1}}{\partial W} \\
+&=\delta_{t-1}^{T} \frac{\partial \mathrm{net}_{t-1}}{\partial W}
+\end{aligned}
+$$
+于是，我们得到递推公式：
+$$
+\begin{aligned}
+\nabla_{W} E &=\frac{\partial E}{\partial W} \\
+&=\frac{\partial E}{\partial \operatorname{net}_{t}} \frac{\partial \mathrm{net}_{t}}{\partial W} \\
+&=\nabla_{W t} E+\delta_{t-1}^{T} \frac{\partial \operatorname{net}_{t-1}}{\partial W} \\
+&=\nabla_{W t} E+\nabla_{W t-1} E+\delta_{t-2}^{T} \frac{\partial \mathrm{net}_{t-2}}{\partial W} \\
+&=\nabla_{W t} E+\nabla_{W t-1} E+\ldots+\nabla_{W 1} E \\
+&=\sum_{k=1}^{t} \nabla_{W k} E
+\end{aligned}
+$$
+证毕。
+
+同权重矩阵W类似，我们可以得到权重矩阵$U$的计算方法。
+
+#### RNN的梯度爆炸和消失问题
+
+不幸的是，实践中前面介绍的几种RNNs并不能很好的处理较长的序列。一个主要的原因是，RNN在训练中很容易发生**梯度爆炸**和**梯度消失**，这导致训练时梯度不能在较长序列中一直传递下去，从而使RNN无法捕捉到长距离的影响。
+
+为什么RNN会产生梯度爆炸和消失问题呢？我们接下来将详细分析一下原因。我们根据**式3**可得：
+$$
+\begin{aligned}
+\delta_{k}^{T} &=\delta_{t}^{T} \prod_{i=k}^{t-1} W \operatorname{diag}\left[f^{\prime}\left(\text { net }_{i}\right)\right] \\
+\left\|\delta_{k}^{T}\right\| & \leqslant\left\|\delta_{t}^{T}\right\| \prod_{i=k}^{t-1}\|W\|\left\|\operatorname{diag}\left[f^{\prime}\left(\operatorname{net}_{i}\right)\right]\right\| \\
+& \leqslant\left\|\delta_{t}^{T}\right\|\left(\beta_{W} \beta_{f}\right)^{t-k}
+\end{aligned}
+$$
+上式的$\beta$定义为矩阵的模的上界。因为上式是一个指数函数，如果$t-k$很大的话（也就是向前看很远的时候），会导致对应的**误差项**的值增长或缩小的非常快，这样就会导致相应的**梯度爆炸**和**梯度消失**问题（取决于$\beta$大于1还是小于1）。
+
+通常来说，**梯度爆炸**更容易处理一些。因为梯度爆炸的时候，我们的程序会收到NaN错误。我们也可以设置一个梯度阈值，当梯度超过这个阈值的时候可以直接截取。
+
+**梯度消失**更难检测，而且也更难处理一些。总的来说，我们有三种方法应对梯度消失问题：
+
+1. 合理的初始化权重值。初始化权重，使每个神经元尽可能不要取极大或极小值，以躲开梯度消失的区域。
+2. 使用relu代替sigmoid和tanh作为激活函数。
+3. 使用其他结构的RNNs，比如长短时记忆网络（LTSM）和Gated Recurrent Unit（GRU），这是最流行的做法。我们将在以后的文章中介绍这两种网络。
 
