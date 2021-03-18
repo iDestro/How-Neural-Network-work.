@@ -1,9 +1,10 @@
 import tensorflow as tf
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers import Adam, SGD
 import numpy as np
 import math
 import time
 from utils import predict_rnn
+import copy
 
 
 def train(model, preprocess, num_epochs, batch_size, num_steps, lr):
@@ -27,10 +28,9 @@ def train(model, preprocess, num_epochs, batch_size, num_steps, lr):
 
             print('epoch %d, perplexity %f, time %.2f sec' % (
                 epoch + 1, math.exp(l_sum / n), time.time()-now))
-            if n % 50 == 0:
-                print(predict_rnn('分开', 20, model, len(preprocess.idx_to_char), preprocess.idx_to_char, preprocess.char_to_idx))
+            print(predict_rnn('分开', 50, model, len(preprocess.idx_to_char), preprocess.idx_to_char, preprocess.char_to_idx))
 
-
+            cnt += 1
 
 
 

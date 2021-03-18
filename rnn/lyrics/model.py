@@ -55,16 +55,6 @@ def to_onehot(X, size):  # 本函数已保存在d2lzh_tensorflow2包中方便以
 
 
 if __name__ == '__main__':
-    model = LSTM()
-    from utils import Preprocess
-    pre = Preprocess()
-    pre.load_dataset('./jaychou_lyrics.txt')
-
-    iter = pre.get_data_iter(batch_size=3, num_steps=5)
-
-    for x, y in iter:
-        x = to_onehot(x, len(pre.idx_to_char))
-        print(model(x))
-        break
+    ...
 
 
